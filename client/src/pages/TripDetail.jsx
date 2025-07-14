@@ -1,0 +1,153 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { tripAPI } from '../utils/api';
+import Loading from '../components/common/Loading';
+
+const TripDetail = () => {
+  const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    loadTrip();
+  }, [id]);
+
+  const loadTrip = async () => {
+    try {
+      setLoading(true);
+      const response = await tripAPI.getTripById(id);
+      setTrip(response.data);
+    } catch (error) {
+      setError('Failed to load trip');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this trip?')) {
+      try {
+        await tripAPI.deleteTrip(id);
+        navigate('/dashboard');
+      } catch (error) {
+        setError('Failed to delete trip');
+      }
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!trip) {
+    return (
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900">Trip not found</h2>
+          <Link to="/dashboard" className="btn-primary mt-4">
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="mb-6">
+        <Link to="/dashboard" className="text-primary-600 hover:text-primary-800">
+          ← Back to Dashboard
+        </Link>
+      </div>
+
+      <div className="card">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{trip.title}</h1>
+            <p className="text-lg text-gray-600">{trip.destination}</p>
+          </div>
+          <div className="flex space-x-3">
+            <Link
+              to={`/trips/${trip._id}/edit`}
+              className="btn-secondary"
+            >
+              Edit Trip
+            </Link>
+            <button
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              Delete Trip
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Trip Details</h3>
+            <div className="space-y-2">
+              <p className="text-gray-600">
+                <span className="font-medium">Start Date:</span> {formatDate(trip.startDate)}
+              </p>
+              <p className="text-gray-600">
+                <span className="font-medium">End Date:</span> {formatDate(trip.endDate)}
+              </p>
+              {trip.budget > 0 && (
+                <p className="text-gray-600">
+                  <span className="font-medium">Budget:</span> ${trip.budget}
+                </p>
+              )}
+              <p className="text-gray-600">
+                <span className="font-medium">Created:</span> {formatDate(trip.createdAt)}
+              </p>
+            </div>
+          </div>
+
+          {trip.activities && trip.activities.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Activities</h3>
+              <ul className="space-y-1">
+                {trip.activities.map((activity, index) => (
+                  <li key={index} className="text-gray-600">
+                    • {activity}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {trip.description && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
+            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+              {trip.description}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TripDetail;
