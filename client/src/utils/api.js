@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -34,17 +34,17 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  register: (userData) => api.post('/auth/register', userData),
-  login: (credentials) => api.post('/auth/login', credentials),
-  getMe: () => api.get('/auth/me'),
+  register: (userData) => api.post('/api/auth/register', userData),
+  login: (credentials) => api.post('/api/auth/login', credentials),
+  getMe: () => api.get('/api/auth/me'),
 };
 
 export const tripAPI = {
-  getTrips: () => api.get('/trips'),
-  getTripById: (id) => api.get(`/trips/${id}`),
-  createTrip: (tripData) => api.post('/trips', tripData),
-  updateTrip: (id, tripData) => api.put(`/trips/${id}`, tripData),
-  deleteTrip: (id) => api.delete(`/trips/${id}`),
+  getTrips: () => api.get('/api/trips'),
+  getTripById: (id) => api.get(`/api/trips/${id}`),
+  createTrip: (tripData) => api.post('/api/trips', tripData),
+  updateTrip: (id, tripData) => api.put(`/api/trips/${id}`, tripData),
+  deleteTrip: (id) => api.delete(`/api/trips/${id}`),
 };
 
 export default api;
