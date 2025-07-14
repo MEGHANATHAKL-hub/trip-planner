@@ -47,4 +47,10 @@ export const tripAPI = {
   deleteTrip: (id) => api.delete(`/api/trips/${id}`),
 };
 
+export const collaboratorAPI = {
+  getCollaborators: (tripId) => api.get(`/api/collaborators/${tripId}`),
+  addCollaborator: (tripId, userData) => api.post(`/api/collaborators/${tripId}`, userData),
+  removeCollaborator: (tripId, userId) => api.delete(`/api/collaborators/${tripId}/${userId}`),
+};
+
 export default api;

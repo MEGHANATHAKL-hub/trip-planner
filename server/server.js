@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
 import tripRoutes from './routes/trips.js';
+import collaboratorRoutes from './routes/collaborators.js';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
+app.use('/api/collaborators', collaboratorRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Trip Planner API is running!' });

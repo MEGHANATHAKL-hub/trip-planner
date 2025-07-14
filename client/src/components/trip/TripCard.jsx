@@ -1,7 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const TripCard = ({ trip, onDelete }) => {
+  const { user } = useAuth();
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -13,24 +15,48 @@ const TripCard = ({ trip, onDelete }) => {
     }
   };
 
+  const isOwner = user && trip.userId && (trip.userId._id === user.id || trip.userId === user.id);
+  const isCollaborator = user && trip.collaborators?.some(c => c._id === user.id);
+  const canEdit = isOwner || isCollaborator;
+
   return (
     <div className="card hover:shadow-lg transition-shadow duration-200">
       <div className="flex justify-between items-start mb-4">
-        <h3 className="text-xl font-semibold text-gray-900">{trip.title}</h3>
-        <div className="flex space-x-2">
-          <Link
-            to={`/trips/${trip._id}/edit`}
-            className="text-primary-600 hover:text-primary-800 text-sm"
-          >
-            Edit
-          </Link>
-          <button
-            onClick={handleDelete}
-            className="text-red-600 hover:text-red-800 text-sm"
-          >
-            Delete
-          </button>
+        <div>
+          <h3 className="text-xl font-semibold text-gray-900">{trip.title}</h3>
+          <p className="text-sm text-primary-600 mt-1">
+            Created by: {trip.userId?.username || 'Unknown User'}
+          </p>
+          {trip.collaborators && trip.collaborators.length > 0 && (
+            <p className="text-xs text-green-600 mt-1">
+              {trip.collaborators.length} collaborator{trip.collaborators.length > 1 ? 's' : ''}
+            </p>
+          )}
+          {isCollaborator && (
+            <p className="text-xs text-green-700 mt-1 font-medium">
+              ✏️ You can edit this trip
+            </p>
+          )}
         </div>
+        {canEdit && (
+          <div className="flex space-x-2">
+            <Link
+              to={`/trips/${trip._id}/edit`}
+              className="text-primary-600 hover:text-primary-800 text-sm"
+            >
+              Edit
+            </Link>
+            {/* Only trip owner can delete */}
+            {isOwner && (
+              <button
+                onClick={handleDelete}
+                className="text-red-600 hover:text-red-800 text-sm"
+              >
+                Delete
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2 mb-4">

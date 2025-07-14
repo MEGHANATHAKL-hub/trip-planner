@@ -11,17 +11,25 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadTrips();
+    
+    // Auto-refresh every 30 seconds to sync with other users
+    const interval = setInterval(() => {
+      loadTrips(false); // Don't show loading spinner for background updates
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
-  const loadTrips = async () => {
+  const loadTrips = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const response = await tripAPI.getTrips();
       setTrips(response.data);
+      setError(''); // Clear any previous errors
     } catch (error) {
       setError('Failed to load trips');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -41,7 +49,10 @@ const Dashboard = () => {
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Trips</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">All Trips</h1>
+          <p className="text-gray-600 mt-1">Discover and share amazing travel plans with the community</p>
+        </div>
         <Link to="/trips/new" className="btn-primary">
           Create New Trip
         </Link>
@@ -57,13 +68,13 @@ const Dashboard = () => {
         <div className="text-center py-12">
           <div className="bg-gray-100 rounded-lg p-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              No trips yet
+              No trips shared yet
             </h2>
             <p className="text-gray-600 mb-6">
-              Start planning your first adventure by creating a new trip.
+              Be the first to share an amazing travel plan with the community!
             </p>
             <Link to="/trips/new" className="btn-primary">
-              Create Your First Trip
+              Create the First Trip
             </Link>
           </div>
         </div>

@@ -3,7 +3,10 @@ import TripPlan from '../models/TripPlan.js';
 
 export const getTrips = async (req, res) => {
   try {
-    const trips = await TripPlan.find({ userId: req.user._id }).sort({ createdAt: -1 });
+    const trips = await TripPlan.find({})
+      .populate('userId', 'username email')
+      .populate('collaborators', 'username email')
+      .sort({ createdAt: -1 });
     res.json(trips);
   } catch (error) {
     console.error('Get trips error:', error);
@@ -13,10 +16,9 @@ export const getTrips = async (req, res) => {
 
 export const getTripById = async (req, res) => {
   try {
-    const trip = await TripPlan.findOne({ 
-      _id: req.params.id, 
-      userId: req.user._id 
-    });
+    const trip = await TripPlan.findById(req.params.id)
+      .populate('userId', 'username email')
+      .populate('collaborators', 'username email');
 
     if (!trip) {
       return res.status(404).json({ message: 'Trip not found' });
@@ -50,6 +52,8 @@ export const createTrip = async (req, res) => {
     });
 
     await trip.save();
+    await trip.populate('userId', 'username email');
+    await trip.populate('collaborators', 'username email');
 
     res.status(201).json({
       message: 'Trip created successfully',
@@ -70,13 +74,20 @@ export const updateTrip = async (req, res) => {
 
     const { title, description, destination, startDate, endDate, activities, budget } = req.body;
 
-    const trip = await TripPlan.findOne({ 
-      _id: req.params.id, 
-      userId: req.user._id 
-    });
+    const trip = await TripPlan.findById(req.params.id);
 
     if (!trip) {
       return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    // Allow owner and collaborators to edit the trip
+    const isOwner = trip.userId.toString() === req.user._id.toString();
+    const isCollaborator = trip.collaborators.some(
+      collaboratorId => collaboratorId.toString() === req.user._id.toString()
+    );
+
+    if (!isOwner && !isCollaborator) {
+      return res.status(403).json({ message: 'You can only edit trips you own or collaborate on' });
     }
 
     trip.title = title || trip.title;
@@ -88,6 +99,8 @@ export const updateTrip = async (req, res) => {
     trip.budget = budget !== undefined ? budget : trip.budget;
 
     await trip.save();
+    await trip.populate('userId', 'username email');
+    await trip.populate('collaborators', 'username email');
 
     res.json({
       message: 'Trip updated successfully',
@@ -101,14 +114,18 @@ export const updateTrip = async (req, res) => {
 
 export const deleteTrip = async (req, res) => {
   try {
-    const trip = await TripPlan.findOneAndDelete({ 
-      _id: req.params.id, 
-      userId: req.user._id 
-    });
+    const trip = await TripPlan.findById(req.params.id);
 
     if (!trip) {
       return res.status(404).json({ message: 'Trip not found' });
     }
+
+    // Only allow the original creator to delete the trip (not collaborators)
+    if (trip.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only trip owner can delete the trip' });
+    }
+
+    await TripPlan.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Trip deleted successfully' });
   } catch (error) {

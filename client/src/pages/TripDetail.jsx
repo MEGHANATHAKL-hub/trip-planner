@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { tripAPI } from '../utils/api';
 import Loading from '../components/common/Loading';
+import { useAuth } from '../context/AuthContext';
+import CollaboratorManager from '../components/trip/CollaboratorManager';
 
 const TripDetail = () => {
   const [trip, setTrip] = useState(null);
@@ -9,6 +11,7 @@ const TripDetail = () => {
   const [error, setError] = useState('');
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadTrip();
@@ -85,21 +88,32 @@ const TripDetail = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{trip.title}</h1>
             <p className="text-lg text-gray-600">{trip.destination}</p>
+            <p className="text-sm text-primary-600 mt-2">
+              Created by: {trip.userId?.username || 'Unknown User'}
+            </p>
           </div>
-          <div className="flex space-x-3">
-            <Link
-              to={`/trips/${trip._id}/edit`}
-              className="btn-secondary"
-            >
-              Edit Trip
-            </Link>
-            <button
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-            >
-              Delete Trip
-            </button>
-          </div>
+          {user && trip.userId && (
+            (trip.userId._id === user.id || trip.userId === user.id) || 
+            trip.collaborators?.some(c => c._id === user.id)
+          ) && (
+            <div className="flex space-x-3">
+              <Link
+                to={`/trips/${trip._id}/edit`}
+                className="btn-secondary"
+              >
+                Edit Trip
+              </Link>
+              {/* Only trip owner can delete */}
+              {(trip.userId._id === user.id || trip.userId === user.id) && (
+                <button
+                  onClick={handleDelete}
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                >
+                  Delete Trip
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -119,6 +133,9 @@ const TripDetail = () => {
               )}
               <p className="text-gray-600">
                 <span className="font-medium">Created:</span> {formatDate(trip.createdAt)}
+              </p>
+              <p className="text-gray-600">
+                <span className="font-medium">Created by:</span> {trip.userId?.username || 'Unknown User'}
               </p>
             </div>
           </div>
@@ -145,6 +162,11 @@ const TripDetail = () => {
             </p>
           </div>
         )}
+
+        <CollaboratorManager 
+          trip={trip} 
+          onTripUpdate={setTrip}
+        />
       </div>
     </div>
   );
