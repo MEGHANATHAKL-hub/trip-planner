@@ -14,7 +14,7 @@ connectDB();
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://trip-planner-prod.netlify.app/', 'https://your-frontend-domain.vercel.app']
+    ? ['https://trip-planner-prod.netlify.app', 'https://trip-planner-prod.netlify.app/']
     : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'],
   credentials: true
 }));
