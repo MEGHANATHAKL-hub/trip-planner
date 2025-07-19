@@ -1,6 +1,5 @@
 import User from '../models/User.js';
 import TripPlan from '../models/TripPlan.js';
-import bcrypt from 'bcryptjs';
 
 // Admin-only: Get all users
 export const getUsers = async (req, res) => {
@@ -218,12 +217,8 @@ export const updateUserPassword = async (req, res) => {
     
     console.log('Updating password for user:', userToUpdate.username);
     
-    // Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    
-    // Update the user's password
-    userToUpdate.password = hashedPassword;
+    // Update the user's password (let the pre-save hook handle hashing)
+    userToUpdate.password = password;
     await userToUpdate.save();
     
     console.log('Password updated successfully for user:', userToUpdate.username);

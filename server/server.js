@@ -53,7 +53,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/itinerary', itineraryRoutes);
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({ message: 'Trip Planner API is running!' });
 });
 
