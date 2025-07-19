@@ -20,15 +20,21 @@ connectDB();
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = process.env.NODE_ENV === 'production'
-      ? process.env.CLIENT_URL?.split(',') || ['https://trip-planner-prod.netlify.app']
+      ? process.env.CLIENT_URL?.split(',') || ['https://trip-planner-prod.netlify.app', 'https://trip-planner-xihe.onrender.com']
       : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176'];
     
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
+    // Temporarily allow all netlify and onrender domains for debugging
+    if (origin && (origin.includes('netlify.app') || origin.includes('onrender.com'))) {
+      return callback(null, true);
+    }
+    
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.log('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
