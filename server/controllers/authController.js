@@ -36,7 +36,8 @@ export const register = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (error) {
@@ -72,7 +73,8 @@ export const login = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (error) {
@@ -87,7 +89,8 @@ export const getMe = async (req, res) => {
       user: {
         id: req.user._id,
         username: req.user.username,
-        email: req.user.email
+        email: req.user.email,
+        role: req.user.role
       }
     });
   } catch (error) {

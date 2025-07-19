@@ -54,7 +54,73 @@ const tripPlanSchema = new mongoose.Schema({
   isPublic: {
     type: Boolean,
     default: true
-  }
+  },
+  photos: [{
+    filename: {
+      type: String,
+      required: true
+    },
+    originalName: {
+      type: String,
+      required: true
+    },
+    caption: {
+      type: String,
+      default: ''
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    },
+    uploadedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    }
+  }],
+  itinerary: [{
+    day: {
+      type: Number,
+      required: true
+    },
+    date: {
+      type: Date,
+      required: true
+    },
+    activities: [{
+      name: {
+        type: String,
+        required: true
+      },
+      description: String,
+      startTime: String,
+      endTime: String,
+      location: {
+        name: String,
+        address: String,
+        coordinates: {
+          lat: Number,
+          lng: Number
+        }
+      },
+      category: {
+        type: String,
+        enum: ['transport', 'accommodation', 'food', 'activity', 'sightseeing', 'other'],
+        default: 'activity'
+      },
+      notes: String,
+      cost: {
+        type: Number,
+        default: 0
+      },
+      bookingUrl: String,
+      bookingReference: String,
+      orderIndex: {
+        type: Number,
+        required: true
+      }
+    }]
+  }]
 }, {
   timestamps: true
 });

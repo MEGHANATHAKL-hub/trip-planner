@@ -4,8 +4,9 @@ import TripPlan from '../models/TripPlan.js';
 export const getTrips = async (req, res) => {
   try {
     const trips = await TripPlan.find({})
-      .populate('userId', 'username email')
-      .populate('collaborators', 'username email')
+      .populate('userId', 'username email profilePhoto')
+      .populate('collaborators', 'username email profilePhoto')
+      .populate('photos.uploadedBy', 'username')
       .sort({ createdAt: -1 });
     res.json(trips);
   } catch (error) {
@@ -17,8 +18,9 @@ export const getTrips = async (req, res) => {
 export const getTripById = async (req, res) => {
   try {
     const trip = await TripPlan.findById(req.params.id)
-      .populate('userId', 'username email')
-      .populate('collaborators', 'username email');
+      .populate('userId', 'username email profilePhoto')
+      .populate('collaborators', 'username email profilePhoto')
+      .populate('photos.uploadedBy', 'username');
 
     if (!trip) {
       return res.status(404).json({ message: 'Trip not found' });

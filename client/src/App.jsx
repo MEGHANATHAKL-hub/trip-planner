@@ -10,6 +10,8 @@ import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import TripDetail from './pages/TripDetail';
 import TripForm from './components/trip/TripForm';
+import UserDirectory from './pages/UserDirectory';
+import UserProfile from './pages/UserProfile';
 
 const AppRoutes = () => {
   const { loading, isAuthenticated } = useAuth();
@@ -61,6 +63,22 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/users" 
+        element={
+          <ProtectedRoute>
+            <UserDirectory />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/users/:userId" 
+        element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        } 
+      />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
@@ -70,9 +88,11 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
           <Navbar />
-          <AppRoutes />
+          <main className="pb-safe">
+            <AppRoutes />
+          </main>
         </div>
       </Router>
     </AuthProvider>

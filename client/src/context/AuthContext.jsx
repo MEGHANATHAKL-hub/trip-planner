@@ -27,8 +27,10 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const response = await authAPI.getMe();
+      console.log('Auth check response:', response.data.user);
       setUser(response.data.user);
     } catch (error) {
+      console.error('Auth check error:', error);
       localStorage.removeItem('token');
     } finally {
       setLoading(false);
@@ -40,11 +42,14 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login(credentials);
       const { token, user } = response.data;
       
+      console.log('Login response user:', user);
+      
       localStorage.setItem('token', token);
       setUser(user);
       
       return { success: true };
     } catch (error) {
+      console.error('Login error:', error);
       return { 
         success: false, 
         error: error.response?.data?.message || 'Login failed' 
@@ -81,6 +86,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     loading,
     isAuthenticated: !!user,
+    isAdmin: user?.role === 'admin',
   };
 
   return (

@@ -53,4 +53,21 @@ export const collaboratorAPI = {
   removeCollaborator: (tripId, userId) => api.delete(`/api/collaborators/${tripId}/${userId}`),
 };
 
+export const userAPI = {
+  getUsers: (params) => api.get('/api/users', { params }),
+  getUserProfile: (userId) => api.get(`/api/users/${userId}`),
+  searchUsers: (query) => api.get('/api/users/search', { params: { q: query } }),
+  deleteUser: (userId) => api.delete(`/api/users/${userId}`),
+  updateUserRole: (userId, role) => api.put(`/api/users/${userId}/role`, { role }),
+  updateUserPassword: (userId, password) => api.put(`/api/users/${userId}/password`, { password }),
+};
+
+export const itineraryAPI = {
+  getItinerary: (tripId) => api.get(`/api/itinerary/${tripId}`),
+  updateDay: (tripId, dayData) => api.put(`/api/itinerary/${tripId}/day`, dayData),
+  deleteDay: (tripId, day) => api.delete(`/api/itinerary/${tripId}/day/${day}`),
+  reorderActivities: (tripId, data) => api.put(`/api/itinerary/${tripId}/reorder`, data),
+  copyActivities: (tripId, data) => api.post(`/api/itinerary/${tripId}/copy`, data),
+};
+
 export default api;

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { collaboratorAPI } from '../../utils/api';
+import UserSearchDropdown from '../common/UserSearchDropdown';
 
 const CollaboratorManager = ({ trip, onTripUpdate }) => {
-  const [newCollaborator, setNewCollaborator] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -11,17 +11,13 @@ const CollaboratorManager = ({ trip, onTripUpdate }) => {
 
   const isOwner = user && trip.userId && (trip.userId._id === user.id || trip.userId === user.id);
 
-  const handleAddCollaborator = async (e) => {
-    e.preventDefault();
-    if (!newCollaborator.trim()) return;
-
+  const handleAddCollaborator = async (selectedUser) => {
     setLoading(true);
     setError('');
 
     try {
-      const response = await collaboratorAPI.addCollaborator(trip._id, { username: newCollaborator });
+      const response = await collaboratorAPI.addCollaborator(trip._id, { username: selectedUser.username });
       onTripUpdate(response.data.trip);
-      setNewCollaborator('');
       setShowForm(false);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to add collaborator');
@@ -44,16 +40,29 @@ const CollaboratorManager = ({ trip, onTripUpdate }) => {
     }
   };
 
+  const getCollaboratorCount = () => {
+    return (trip.collaborators?.length || 0) + 1; // +1 for owner
+  };
+
   return (
-    <div className="border-t pt-6 mt-6">
+    <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Collaborators</h3>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Trip Collaborators</h3>
+          <p className="text-sm text-gray-600">
+            {getCollaboratorCount()} {getCollaboratorCount() === 1 ? 'person' : 'people'} can access this trip
+          </p>
+        </div>
         {isOwner && (
           <button
             onClick={() => setShowForm(!showForm)}
-            className="btn-secondary text-sm"
+            className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+              showForm 
+                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
+                : 'bg-primary-600 text-white hover:bg-primary-700'
+            }`}
           >
-            {showForm ? 'Cancel' : 'Add Collaborator'}
+            {showForm ? '✕ Cancel' : '+ Add Collaborator'}
           </button>
         )}
       </div>
@@ -65,40 +74,45 @@ const CollaboratorManager = ({ trip, onTripUpdate }) => {
       )}
 
       {showForm && isOwner && (
-        <form onSubmit={handleAddCollaborator} className="mb-4 p-4 bg-gray-50 rounded-lg">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newCollaborator}
-              onChange={(e) => setNewCollaborator(e.target.value)}
-              placeholder="Enter username"
-              className="input-field flex-1"
-              disabled={loading}
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Search and select a user to add as collaborator:
+            </label>
+            <UserSearchDropdown
+              onUserSelect={handleAddCollaborator}
+              placeholder="Type username or email to search..."
+              excludeUserIds={[
+                trip.userId._id || trip.userId,
+                ...(trip.collaborators?.map(c => c._id) || [])
+              ]}
             />
-            <button
-              type="submit"
-              disabled={loading || !newCollaborator.trim()}
-              className="btn-primary"
-            >
-              {loading ? 'Adding...' : 'Add'}
-            </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Add a collaborator by their username. They will be able to edit this trip.
+          <p className="text-xs text-gray-500">
+            Search for users by username or email. Selected collaborators will be able to view and edit this trip.
           </p>
-        </form>
+          {loading && (
+            <div className="mt-2 flex items-center text-sm text-primary-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500 mr-2"></div>
+              Adding collaborator...
+            </div>
+          )}
+        </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {/* Trip Owner */}
-        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+            <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium shadow-md">
               {trip.userId?.username?.charAt(0).toUpperCase() || 'O'}
             </div>
             <div>
-              <p className="font-medium text-gray-900">{trip.userId?.username || 'Unknown'}</p>
-              <p className="text-xs text-blue-600">Trip Owner</p>
+              <p className="font-semibold text-gray-900">{trip.userId?.username || 'Unknown'}</p>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">👑 Owner</span>
+                <span className="text-xs text-blue-700">Full access</span>
+              </div>
             </div>
           </div>
         </div>
@@ -106,21 +120,24 @@ const CollaboratorManager = ({ trip, onTripUpdate }) => {
         {/* Collaborators */}
         {trip.collaborators && trip.collaborators.length > 0 ? (
           trip.collaborators.map((collaborator) => (
-            <div key={collaborator._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div key={collaborator._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium shadow-md">
                   {collaborator.username?.charAt(0).toUpperCase() || 'C'}
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">{collaborator.username}</p>
-                  <p className="text-xs text-green-600">Collaborator</p>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">🤝 Collaborator</span>
+                    <span className="text-xs text-gray-500">Can edit</span>
+                  </div>
                 </div>
               </div>
               {isOwner && (
                 <button
                   onClick={() => handleRemoveCollaborator(collaborator._id)}
                   disabled={loading}
-                  className="text-red-600 hover:text-red-800 text-sm"
+                  className="px-3 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors text-sm font-medium"
                 >
                   Remove
                 </button>
@@ -128,14 +145,24 @@ const CollaboratorManager = ({ trip, onTripUpdate }) => {
             </div>
           ))
         ) : (
-          <p className="text-gray-500 text-sm py-3">No collaborators yet</p>
+          <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <div className="text-gray-400 text-4xl mb-2">👥</div>
+            <p className="text-gray-500 font-medium">No collaborators yet</p>
+            <p className="text-gray-400 text-sm">Add collaborators to plan this trip together</p>
+          </div>
         )}
       </div>
 
       {!isOwner && trip.collaborators?.some(c => c._id === user?.id) && (
-        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-700 text-sm">
-            🎉 You are a collaborator on this trip and can edit it!
+        <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <span className="text-green-600 text-lg">🎉</span>
+            <p className="text-green-700 font-medium">
+              You're a collaborator on this trip!
+            </p>
+          </div>
+          <p className="text-green-600 text-sm mt-1">
+            You can view and edit all trip details including the itinerary.
           </p>
         </div>
       )}
